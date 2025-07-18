@@ -29,6 +29,8 @@ This tool is designed to save developers time and effort by eliminating the tedi
 ## 📂 Project Structure
 
 The project is organized into a simple monorepo structure with a clear separation between the frontend and backend.
+<pre lang="markdown">
+```
 autodoc-cli/
 ├── frontend/
 │   └── index.html      # The single-page web application UI
@@ -36,6 +38,9 @@ autodoc-cli/
 ├── .env                # Environment variables (for API key)
 ├── index.js            # The Node.js/Express backend server
 └── package.json        # Project manifest and server dependencies.
+```
+</pre>
+
 ## 🚀 Getting Started
 
 Follow these steps to set up and run the AutoDocify application on your local machine.
