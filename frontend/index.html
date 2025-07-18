@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoDocify Web UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-main: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --accent: #007bff;
+            --accent-hover: #0056b3;
+            --border-color: #dee2e6;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+        }
+        .btn-primary:disabled {
+            background-color: #a0c7ff;
+            cursor: not-allowed;
+        }
+        .prose-preview h1, .prose-preview h2, .prose-preview h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 1.5em;
+        }
+        .prose-preview p, .prose-preview ul, .prose-preview ol, .prose-preview blockquote {
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+        .prose-preview code {
+            background-color: #e9ecef;
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-size: 85%;
+        }
+        .prose-preview pre {
+            background-color: #e9ecef;
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .loader {
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="antialiased">
+
+    <div id="app" class="min-h-screen flex flex-col">
+        <header class="bg-white/80 backdrop-blur-sm border-b border-stone-200 sticky top-0 z-30">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="font-bold text-xl text-stone-800">AutoDocify</span>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="flex-grow">
+            <div id="input-view">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center flex flex-col items-center">
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-800">
+                        Instant Documentation for any Project.
+                    </h1>
+                    <p class="mt-6 max-w-2xl mx-auto text-lg text-stone-600">
+                        Enter the absolute path to a local project folder and let our AI engine generate high-quality documentation.
+                    </p>
+                    <div class="mt-8 w-full max-w-xl">
+                        <input type="text" id="path-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center" placeholder="e.g., /Users/yourname/projects/my-app">
+                        <button id="generate-btn" class="mt-4 btn-primary font-semibold py-3 px-8 rounded-lg text-lg w-full" disabled>
+                            Generate Documentation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-view" class="hidden">
+                 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col items-center justify-center text-center">
+                    <div class="loader w-12 h-12 rounded-full border-4 border-gray-200"></div>
+                    <h2 class="text-2xl font-semibold text-stone-700 mt-6">Generating Documentation...</h2>
+                    <p class="text-stone-500 mt-2 w-full max-w-md">Contacting server and analyzing project. This may take a moment...</p>
+                 </div>
+            </div>
+
+            <div id="editor-view" class="hidden">
+                <div class="h-[calc(100vh-4rem)] flex flex-col">
+                    <div class="bg-white border-b border-stone-200 p-4 flex items-center justify-between">
+                        <div>
+                            <button id="back-to-start" class="text-sm font-semibold text-stone-600 hover:text-stone-900 flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                <span>Start Over</span>
+                            </button>
+                            <h1 id="editor-project-name" class="text-xl font-bold text-stone-800 mt-1"></h1>
+                        </div>
+                    </div>
+                    <div class="flex-grow grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+                        <div class="flex flex-col border-r border-stone-200 bg-white">
+                            <div class="border-b border-stone-200">
+                                <nav id="doc-tabs" class="-mb-px flex space-x-4 px-4" aria-label="Tabs"></nav>
+                            </div>
+                            <div class="flex-grow p-1">
+                                <textarea id="markdown-editor" class="w-full h-full p-3 resize-none border-0 focus:ring-0 text-sm leading-6 font-mono bg-gray-50"></textarea>
+                            </div>
+                        </div>
+                        <div class="hidden lg:block flex-grow overflow-y-auto bg-white">
+                            <div id="markdown-preview" class="prose-preview p-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const appState = {
+            activeView: 'input-view',
+            projectName: '',
+            generatedDocs: {},
+            currentDoc: 'README.md',
+        };
+
+        const elements = {
+            inputView: document.getElementById('input-view'),
+            loadingView: document.getElementById('loading-view'),
+            editorView: document.getElementById('editor-view'),
+            pathInput: document.getElementById('path-input'),
+            generateBtn: document.getElementById('generate-btn'),
+            editorProjectName: document.getElementById('editor-project-name'),
+            backToStart: document.getElementById('back-to-start'),
+            docTabs: document.getElementById('doc-tabs'),
+            markdownEditor: document.getElementById('markdown-editor'),
+            markdownPreview: document.getElementById('markdown-preview'),
+        };
+
+        const renderView = () => {
+            ['input-view', 'loading-view', 'editor-view'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(appState.activeView).classList.remove('hidden');
+        };
+
+        const updateEditor = () => {
+            elements.markdownEditor.value = appState.generatedDocs[appState.currentDoc] || '';
+            elements.markdownPreview.innerHTML = marked.parse(elements.markdownEditor.value);
+        };
+
+        const renderEditor = () => {
+            appState.activeView = 'editor-view';
+            elements.editorProjectName.textContent = appState.projectName;
+            const docNames = Object.keys(appState.generatedDocs);
+            appState.currentDoc = docNames[0] || '';
+            
+            elements.docTabs.innerHTML = docNames.map(name => `
+                <button data-doc-name="${name}" class="doc-tab-btn whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm 
+                    ${name === appState.currentDoc ? 'border-blue-500 text-blue-600' : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'}">
+                    ${name}
+                </button>
+            `).join('');
+            
+            updateEditor();
+            renderView();
+        };
+
+        const startGenerationProcess = async (directoryPath) => {
+            appState.projectName = directoryPath.split(/[\\/]/).pop();
+            appState.activeView = 'loading-view';
+            renderView();
+
+            try {
+                const response = await fetch('http://localhost:4000/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ directoryPath }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server returned an error.');
+                }
+
+                const data = await response.json();
+                const docRegex = /\[START_([\w.-]+)\]([\s\S]*?)\[END_\1\]/g;
+                let match;
+                const parsedDocs = {};
+                while ((match = docRegex.exec(data.docs)) !== null) {
+                    parsedDocs[match[1]] = match[2].trim();
+                }
+                
+                if (Object.keys(parsedDocs).length === 0) {
+                    throw new Error("AI response did not contain valid documentation blocks.");
+                }
+
+                appState.generatedDocs = parsedDocs;
+                renderEditor();
+
+            } catch (error) {
+                alert(`An error occurred: ${error.message}`);
+                appState.activeView = 'input-view';
+                renderView();
+            }
+        };
+
+        elements.pathInput.addEventListener('input', () => {
+            elements.generateBtn.disabled = !elements.pathInput.value.trim();
+        });
+
+        elements.generateBtn.addEventListener('click', () => {
+            const directoryPath = elements.pathInput.value.trim();
+            if (directoryPath) {
+                startGenerationProcess(directoryPath);
+            }
+        });
+
+        elements.backToStart.addEventListener('click', () => {
+            appState.activeView = 'input-view';
+            elements.pathInput.value = '';
+            elements.generateBtn.disabled = true;
+            renderView();
+        });
+
+        elements.docTabs.addEventListener('click', (e) => {
+            const button = e.target.closest('.doc-tab-btn');
+            if (button) {
+                appState.currentDoc = button.dataset.docName;
+                renderEditor();
+            }
+        });
+
+        elements.markdownEditor.addEventListener('input', () => {
+             appState.generatedDocs[appState.currentDoc] = elements.markdownEditor.value;
+             elements.markdownPreview.innerHTML = marked.parse(elements.markdownEditor.value);
+        });
+        
+        renderView();
+    });
+    </script>
+</body>
+</html>
