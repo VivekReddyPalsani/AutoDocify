@@ -34,6 +34,10 @@ The project is organized into a simple monorepo structure with a clear separatio
 autodoc-cli/
 ├── frontend/
 │   └── index.html      # The single-page web application UI
+├── Local-Only Version/
+│   └── init-docs.js 
+│   └── update-readme.js    
+│   └── package.json     
 ├── node_modules/       # Server dependencies
 ├── .env                # Environment variables (for API key)
 ├── index.js            # The Node.js/Express backend server
@@ -83,6 +87,10 @@ Follow these steps to set up and run the AutoDocify application on your local ma
 2.  **Open the Frontend:**
     Open your web browser and navigate to:
     [http://localhost:4000](http://localhost:4000)
+
+### Offline Version
+
+For users who wish to run the application in a completely offline environment without dependency on external APIs, the local-version folder contains a self-contained version of this project. This version uses a simplified, non-AI logic engine to generate placeholder documentation and does not require an internet connection or any API keys to function.
 
 ## 📋 How to Use
 
