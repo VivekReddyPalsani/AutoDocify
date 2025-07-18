@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+echo "Running pre-commit hook..."
+
+# Run the script to update README.md based on the current file structure
+node update-readme.js && git add README.md
+
+# Run the linter on all markdown files
+echo "Running Markdown linter..."
+npx markdownlint-cli "*.md"
