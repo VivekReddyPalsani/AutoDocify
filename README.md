@@ -35,7 +35,7 @@ autodoc-cli/
 ├── node_modules/       # Server dependencies
 ├── .env                # Environment variables (for API key)
 ├── index.js            # The Node.js/Express backend server
-└── package.json        # Project manifest and server dependencies
+└── package.json        # Project manifest and server dependencies.
 ## 🚀 Getting Started
 
 Follow these steps to set up and run the AutoDocify application on your local machine.
